@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NnlGharPro - Provider Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',sans-serif;background:#0a0a1a;min-height:100vh;padding:14px;color:#fff;user-select:none}
+        input,textarea{user-select:text}
+        .container{max-width:480px;margin:0 auto}
+        .header{background:linear-gradient(135deg,#1a237e,#283593);border-radius:20px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+        .logo h2{font-size:20px;font-weight:800}
+        .logo h2 span{font-weight:300;font-size:13px;opacity:.85}
+        .logo p{font-size:10px;opacity:.7;margin-top:-2px}
+        .provider-info{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+        .provider-name{font-weight:700;font-size:14px}
+        .logout-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:4px 14px;border-radius:14px;font-size:11px;cursor:pointer}
+        .subscription-card{background:linear-gradient(135deg,rgba(255,217,61,.06),rgba(78,205,196,.04));border:2px solid rgba(255,217,61,.15);border-radius:16px;padding:16px;margin-bottom:14px}
+        .sub-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .sub-title{font-size:16px;font-weight:700;color:#FFD93D;display:flex;align-items:center;gap:8px}
+        .sub-status{padding:4px 16px;border-radius:20px;font-size:11px;font-weight:700}
+        .sub-status.active{background:rgba(78,205,196,.15);color:#4ECDC4}
+        .sub-status.inactive{background:rgba(255,71,87,.15);color:#FF4757}
+        .sub-status.expired{background:rgba(255,152,0,.15);color:#FF9800}
+        .sub-details{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+        .sub-item{background:rgba(255,255,255,.02);border-radius:10px;padding:8px 10px}
+        .sub-item .label{font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase}
+        .sub-item .value{font-size:14px;font-weight:700;color:#fff;margin-top:2px}
+        .sub-actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+        .btn-razorpay{flex:1;background:linear-gradient(135deg,#5F259F,#8B5CF6);color:#fff;border:none;padding:12px 20px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;min-width:150px}
+        .btn-cancel-sub{background:rgba(255,71,87,.15);color:#FF4757;border:1px solid rgba(255,71,87,.2);padding:12px 20px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer}
+        .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+        .stat-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:14px 6px;text-align:center}
+        .stat-number{font-size:22px;font-weight:800;color:#4ECDC4}
+        .stat-label{font-size:10px;color:rgba(255,255,255,.5);margin-top:2px}
+        .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+        .tab-btn{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);padding:10px 4px;border-radius:14px;color:rgba(255,255,255,.4);cursor:pointer;font-size:11px;font-weight:600;min-width:70px;text-align:center}
+        .tab-btn.active{background:linear-gradient(135deg,#1a237e,#283593);color:#fff;border-color:transparent}
+        .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05);border-radius:18px;padding:16px;margin-bottom:14px}
+        .card-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+        .item-card{background:rgba(255,255,255,.03);border-radius:14px;padding:12px 14px;margin-bottom:8px;border-left:4px solid #4ECDC4}
+        .item-name{font-size:15px;font-weight:700;color:#4ECDC4}
+        .item-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px}
+        .btn{padding:10px 18px;border-radius:12px;border:none;font-weight:700;font-size:13px;cursor:pointer}
+        .btn-primary{background:linear-gradient(135deg,#1a237e,#283593);color:#fff}
+        .btn-success{background:linear-gradient(135deg,#4ECDC4,#44B3A8);color:#fff}
+        .btn-danger{background:rgba(255,71,87,.15);color:#FF4757;border:1px solid rgba(255,71,87,.2)}
+        .btn-block{background:linear-gradient(135deg,#FF6B35,#FF8C42);color:#fff;width:100%;padding:12px;border-radius:12px;border:none;font-weight:700;font-size:14px;cursor:pointer;margin-top:8px}
+        .footer{text-align:center;padding:18px 0;border-top:1px solid rgba(255,255,255,.1);margin-top:12px;font-size:12px;color:rgba(255,255,255,.5)}
+        .blocked-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0a0a2a,#1a1a4e);display:none;justify-content:center;align-items:center;z-index:9999;padding:20px;text-align:center}
+        .blocked-overlay.show{display:flex}
+        .blocked-box{max-width:400px;background:rgba(255,255,255,.03);border:1px solid rgba(255,71,87,.2);border-radius:24px;padding:40px 30px}
+        .blocked-box .lock-icon{font-size:80px;margin-bottom:20px;display:block}
+        .blocked-box h2{font-size:24px;color:#FF4757;margin-bottom:12px}
+        .blocked-box p{font-size:14px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:20px}
+        .login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0a0a2a,#1a1a4e);display:flex;justify-content:center;align-items:center;z-index:1000;padding:20px}
+        .login-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:30px;padding:36px 28px;width:92%;max-width:380px;text-align:center}
+        .login-box h2{color:#fff;font-size:24px;margin:4px 0}
+        .login-box h2 span{color:#4ECDC4}
+        .login-box .login-sub{color:rgba(255,255,255,.3);font-size:14px;margin-bottom:16px}
+        .login-input{width:100%;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:#fff;font-size:16px;margin-bottom:12px;outline:none;text-align:center}
+        .login-input:focus{border-color:#4ECDC4}
+        .login-btn{width:100%;padding:16px;border:none;border-radius:16px;background:linear-gradient(135deg,#1a237e,#283593);color:#fff;font-size:18px;font-weight:700;cursor:pointer;margin-top:10px}
+        .login-error{color:#FF4757;font-size:13px;margin-top:10px;display:none}
+        .empty-msg{text-align:center;padding:30px 16px;color:rgba(255,255,255,.25);font-size:14px}
+        .empty-msg .icon{font-size:40px;display:block;margin-bottom:8px}
+        .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.92);border:1px solid rgba(255,255,255,.06);color:#fff;padding:12px 24px;border-radius:50px;display:none;z-index:20000;font-size:14px}
+        .toast.success{border-color:#4ECDC4}
+        .toast.error{border-color:#FF4757}
+    </style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- BLOCKED OVERLAY -->
+<div class="blocked-overlay" id="blockedOverlay">
+    <div class="blocked-box">
+        <span class="lock-icon">🔒</span>
+        <h2>Subscription Required</h2>
+        <p>Aapka subscription <strong id="blockedReason">start nahi kiya gaya</strong>. Portal use karne ke liye ₹500/month subscribe karein.</p>
+        <button class="btn-block" onclick="subscribeWithRazorpay()">👑 Subscribe ₹500/month</button>
+        <button class="btn-danger" onclick="logout()" style="width:100%;margin-top:10px;padding:10px;">Logout</button>
+    </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-box">
+        <div style="font-size:48px;">🔧</div>
+        <h2>Nnl<span>GharPro</span></h2>
+        <p class="login-sub">Provider Panel</p>
+        <input type="email" id="loginEmail" class="login-input" placeholder="📧 Enter Email">
+        <input type="password" id="loginPassword" class="login-input" placeholder="🔒 Enter Password">
+        <button onclick="providerLogin()" class="login-btn">🔐 Login</button>
+        <div id="loginError" class="login-error">❌ Invalid credentials</div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.05);font-size:11px;color:rgba(255,255,255,.3);">
+            📞 Support: 9588562553<br>
+            📧 nnlgharpro@gmail.com
+        </div>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="container" style="display:none;">
+    <div class="header">
+        <div class="logo"><h2>🏠 Nnl<span>GharPro</span></h2><p>Provider Panel</p></div>
+        <div class="provider-info">
+            <div class="provider-name" id="userName">-</div>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+
+    <!-- SUBSCRIPTION -->
+    <div class="subscription-card" id="subscriptionCard">
+        <div class="sub-header">
+            <div class="sub-title">👑 Subscription</div>
+            <span class="sub-status inactive" id="subStatus">⏳ Loading...</span>
+        </div>
+        <div class="sub-details">
+            <div class="sub-item"><div class="label">Plan</div><div class="value" style="color:#FFD93D;">₹500/Month</div></div>
+            <div class="sub-item"><div class="label">Expires</div><div class="value" id="subExpiry">-</div></div>
+        </div>
+        <div class="sub-actions">
+            <button class="btn-razorpay" id="subActionBtn" onclick="subscribeWithRazorpay()">👑 Subscribe ₹500/month</button>
+            <button class="btn-cancel-sub" id="subCancelBtn" onclick="cancelSubscription()" style="display:none;">❌ Cancel</button>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+        <div class="stat-box"><div class="stat-number" id="totalEarnings">₹0</div><div class="stat-label">💰 Earnings</div></div>
+        <div class="stat-box"><div class="stat-number" id="totalOrders">0</div><div class="stat-label">📦 Orders</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('items')">📦 Items</button>
+        <button class="tab-btn" onclick="switchTab('leads')">📋 Leads</button>
+        <button class="tab-btn" onclick="switchTab('earnings')">💰 Earnings</button>
+    </div>
+
+    <!-- ITEMS TAB -->
+    <div id="itemsTab">
+        <div class="card">
+            <div class="card-title">📦 My Services</div>
+            <button class="btn btn-primary" onclick="addMainItem()" style="width:100%;margin-bottom:12px;">➕ Add Main Item</button>
+            <div id="itemsList"><div class="empty-msg"><span class="icon">📦</span>Loading items...</div></div>
+        </div>
+    </div>
+
+    <!-- LEADS TAB -->
+    <div id="leadsTab" style="display:none;">
+        <div class="card">
+            <div class="card-title">📋 Leads</div>
+            <div id="leadsList"><div class="empty-msg"><span class="icon">📋</span>No leads yet</div></div>
+        </div>
+    </div>
+
+    <!-- EARNINGS TAB -->
+    <div id="earningsTab" style="display:none;">
+        <div class="card">
+            <div class="card-title">💰 My Earnings</div>
+            <div id="earningsList"><div class="empty-msg"><span class="icon">💰</span>No earnings yet</div></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Managed by <strong style="color:#4ECDC4;">Randhawa Enterprises</strong></p>
+        <p style="margin-top:4px;">📞 9588562553</p>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// SECURITY (F12, Right-click, etc.)
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('contextmenu', e => { e.preventDefault(); showToast('🔒 Disabled', true); });
+document.addEventListener('keydown', e => {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'u') || e.key === 'PrintScreen') {
+        e.preventDefault(); showToast('🔒 Disabled', true); return false;
+    }
+});
+document.addEventListener('dragstart', e => e.preventDefault());
+document.addEventListener('copy', e => { if (!['INPUT','TEXTAREA'].includes(e.target.tagName)) { e.preventDefault(); } });
+
+// ═══════════════════════════════════════════════════════════
+// FIREBASE
+// ═══════════════════════════════════════════════════════════
+const firebaseConfig = {
+    apiKey: "AIzaSyCBa8UmWUB-djAksNNvp14qoCY2y0HISoE",
+    authDomain: "gharproindia.firebaseapp.com",
+    projectId: "gharproindia",
+    storageBucket: "gharproindia.firebasestorage.app",
+    messagingSenderId: "374168845849",
+    appId: "1:374168845849:web:36aeca99558917c34ff488"
+};
+try { firebase.initializeApp(firebaseConfig); } catch(e) {}
+const db = firebase.firestore();
+
+// ═══════════════════════════════════════════════════════════
+// RAZORPAY
+// ═══════════════════════════════════════════════════════════
+const RAZORPAY_KEY = "rzp_live_TUIiRB57IOF52";
+const SUBSCRIPTION_AMOUNT = 500;
+
+// ═══════════════════════════════════════════════════════════
+// GLOBALS
+// ═══════════════════════════════════════════════════════════
+let currentUser = null;
+let currentSessionId = null;
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function showToast(msg, err = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + (err ? 'error' : 'success');
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3500);
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════════
+window.providerLogin = async function() {
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const password = document.getElementById('loginPassword').value.trim();
+    const errorEl = document.getElementById('loginError');
+    errorEl.style.display = 'none';
+    
+    if (!email || !password) {
+        errorEl.textContent = '❌ Enter email & password';
+        errorEl.style.display = 'block';
+        return;
+    }
+    
+    try {
+        const snapshot = await db.collection('providers')
+            .where('email', '==', email)
+            .where('password', '==', password)
+            .get();
+        
+        if (snapshot.empty) {
+            errorEl.textContent = '❌ Invalid credentials';
+            errorEl.style.display = 'block';
+            return;
+        }
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            currentUser = { id: doc.id, name: data.name || 'Provider', email: data.email, mobile: data.mobile };
+        });
+        
+        currentSessionId = Date.now() + '-' + Math.random().toString(36).substring(2, 8);
+        await db.collection('providers').doc(currentUser.id).update({
+            currentSession: currentSessionId,
+            lastLogin: new Date().toISOString()
+        });
+        
+        localStorage.setItem('gharpro_session', JSON.stringify({
+            id: currentUser.id, sessionId: currentSessionId, name: currentUser.name
+        }));
+        
+        showToast('✅ Welcome ' + currentUser.name + '!');
+        initApp();
+    } catch(e) {
+        errorEl.textContent = '❌ ' + e.message;
+        errorEl.style.display = 'block';
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// SESSION
+// ═══════════════════════════════════════════════════════════
+function checkSession() {
+    const saved = localStorage.getItem('gharpro_session');
+    if (!saved) return;
+    try {
+        const data = JSON.parse(saved);
+        db.collection('providers').doc(data.id).get().then(doc => {
+            if (doc.exists && doc.data().currentSession === data.sessionId) {
+                currentUser = { id: data.id, name: data.name, email: doc.data().email, mobile: doc.data().mobile };
+                currentSessionId = data.sessionId;
+                initApp();
+            }
+        }).catch(() => {});
+    } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT APP
+// ═══════════════════════════════════════════════════════════
+async function initApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('userName').textContent = currentUser.name;
+    
+    // Check subscription
+    const subDoc = await db.collection('subscriptions').doc(currentUser.id).get();
+    const sub = subDoc.exists ? subDoc.data() : null;
+    
+    if (!sub || !sub.active || new Date(sub.expiryDate) < new Date()) {
+        // Block
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('blockedOverlay').classList.add('show');
+        document.getElementById('blockedReason').textContent = sub ? 'expire ho gaya hai' : 'start nahi kiya gaya';
+        return;
+    }
+    
+    // Show portal
+    document.getElementById('blockedOverlay').classList.remove('show');
+    document.getElementById('mainApp').style.display = 'block';
+    
+    const daysLeft = Math.ceil((new Date(sub.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+    document.getElementById('subStatus').className = 'sub-status active';
+    document.getElementById('subStatus').textContent = '✅ Active';
+    document.getElementById('subExpiry').textContent = daysLeft + ' days';
+    document.getElementById('subActionBtn').style.display = 'none';
+    document.getElementById('subCancelBtn').style.display = 'block';
+    
+    loadItems();
+    loadLeads();
+    loadEarnings();
+}
+
+// ═══════════════════════════════════════════════════════════
+// SUBSCRIPTION
+// ═══════════════════════════════════════════════════════════
+window.subscribeWithRazorpay = function() {
+    if (!currentUser) { showToast('❌ Please login first', true); return; }
+    
+    const options = {
+        key: RAZORPAY_KEY,
+        amount: SUBSCRIPTION_AMOUNT * 100,
+        currency: "INR",
+        name: "Randhawa Enterprises",
+        description: "NnlGharPro - Provider Subscription (Monthly)",
+        image: "https://nnlgharpro.in/logo.png",
+        prefill: {
+            name: currentUser.name,
+            email: currentUser.email,
+            contact: currentUser.mobile || '9876543210'
+        },
+        notes: {
+            providerId: currentUser.id,
+            providerName: currentUser.name,
+            subscriptionType: 'monthly'
+        },
+        theme: { color: "#FF6B35" },
+        handler: async function(response) {
+            const expiryDate = new Date();
+            expiryDate.setMonth(expiryDate.getMonth() + 1);
+            
+            await db.collection('subscriptions').doc(currentUser.id).set({
+                providerId: currentUser.id,
+                providerName: currentUser.name,
+                amount: SUBSCRIPTION_AMOUNT,
+                active: true,
+                startDate: new Date().toISOString(),
+                expiryDate: expiryDate.toISOString(),
+                razorpayPaymentId: response.razorpay_payment_id,
+                updatedAt: new Date().toISOString()
+            });
+            
+            showToast('✅ Subscription activated!');
+            setTimeout(() => location.reload(), 1000);
+        }
+    };
+    
+    new Razorpay(options).open();
+};
+
+window.cancelSubscription = async function() {
+    if (!confirm('⚠️ Cancel subscription?\n\nPortal IMMEDIATELY block ho jayega!')) return;
+    
+    try {
+        await db.collection('subscriptions').doc(currentUser.id).update({
+            active: false,
+            cancelledAt: new Date().toISOString()
+        });
+        showToast('✅ Subscription cancelled');
+        setTimeout(() => location.reload(), 1000);
+    } catch(e) {
+        showToast('❌ ' + e.message, true);
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// LOGOUT
+// ═══════════════════════════════════════════════════════════
+window.logout = async function() {
+    if (currentUser) {
+        try { await db.collection('providers').doc(currentUser.id).update({ currentSession: '' }); } catch(e) {}
+    }
+    localStorage.removeItem('gharpro_session');
+    location.reload();
+};
+
+// ═══════════════════════════════════════════════════════════
+// ITEMS
+// ═══════════════════════════════════════════════════════════
+window.addMainItem = async function() {
+    const name = prompt('Enter main item name:');
+    if (!name || !name.trim()) return;
+    
+    try {
+        await db.collection('providers').doc(currentUser.id).collection('items').add({
+            name: name.trim(),
+            subItems: [],
+            hidden: false,
+            createdAt: new Date().toISOString()
+        });
+        showToast('✅ Item added');
+        loadItems();
+    } catch(e) {
+        showToast('❌ ' + e.message, true);
+    }
+};
+
+async function loadItems() {
+    const container = document.getElementById('itemsList');
+    try {
+        const snapshot = await db.collection('providers').doc(currentUser.id).collection('items').get();
+        
+        if (snapshot.empty) {
+            container.innerHTML = '<div class="empty-msg"><span class="icon">📦</span>No items yet<br><small style="font-size:11px;">Click "Add Main Item" to start</small></div>';
+            return;
+        }
+        
+        let html = '';
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            html += `
+                <div class="item-card">
+                    <div class="item-name">${d.name}</div>
+                    <div class="item-sub">${(d.subItems || []).length} sub-items</div>
+                    <div style="display:flex;gap:6px;margin-top:8px;">
+                        <button class="btn btn-danger" onclick="deleteItem('${doc.id}')" style="font-size:11px;padding:4px 10px;">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch(e) {
+        container.innerHTML = '<div class="empty-msg">Error: ' + e.message + '</div>';
+    }
+}
+
+window.deleteItem = async function(id) {
+    if (!confirm('Delete this item?')) return;
+    try {
+        await db.collection('providers').doc(currentUser.id).collection('items').doc(id).delete();
+        showToast('🗑️ Deleted');
+        loadItems();
+    } catch(e) {
+        showToast('❌ ' + e.message, true);
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// LEADS
+// ═══════════════════════════════════════════════════════════
+async function loadLeads() {
+    const container = document.getElementById('leadsList');
+    try {
+        const snapshot = await db.collection('bookings')
+            .where('assignedTo', '==', currentUser.id)
+            .get();
+        
+        if (snapshot.empty) {
+            container.innerHTML = '<div class="empty-msg"><span class="icon">📋</span>No leads yet</div>';
+            return;
+        }
+        
+        let html = '';
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            html += `
+                <div class="item-card">
+                    <div class="item-name">${d.service || 'Service'}</div>
+                    <div class="item-sub">👤 ${d.customerName || 'N/A'} • 📞 ${d.customerMobile || 'N/A'}</div>
+                    <div class="item-sub">💰 ₹${d.totalAmount || 0} • Status: ${d.status || 'pending'}</div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch(e) {
+        container.innerHTML = '<div class="empty-msg">Error: ' + e.message + '</div>';
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// EARNINGS
+// ═══════════════════════════════════════════════════════════
+async function loadEarnings() {
+    const container = document.getElementById('earningsList');
+    try {
+        const snapshot = await db.collection('bookings')
+            .where('assignedTo', '==', currentUser.id)
+            .where('paymentStatus', '==', 'paid')
+            .get();
+        
+        let total = 0, count = 0;
+        snapshot.forEach(doc => {
+            total += doc.data().providerAmount || 0;
+            count++;
+        });
+        
+        document.getElementById('totalEarnings').textContent = '₹' + total.toLocaleString();
+        document.getElementById('totalOrders').textContent = count;
+        
+        container.innerHTML = `
+            <div style="text-align:center;padding:30px;">
+                <div style="font-size:42px;font-weight:800;color:#FFD93D;">₹${total.toLocaleString()}</div>
+                <div style="font-size:14px;color:rgba(255,255,255,.5);margin-top:8px;">Total Earnings</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.3);margin-top:12px;">From ${count} completed orders</div>
+            </div>
+        `;
+    } catch(e) {
+        container.innerHTML = '<div class="empty-msg">Error: ' + e.message + '</div>';
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════
+window.switchTab = function(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    if (event && event.target) event.target.classList.add('active');
+    document.getElementById('itemsTab').style.display = 'none';
+    document.getElementById('leadsTab').style.display = 'none';
+    document.getElementById('earningsTab').style.display = 'none';
+    document.getElementById(tab + 'Tab').style.display = 'block';
+};
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', checkSession);
+
+// Enter key shortcuts
+document.getElementById('loginEmail').addEventListener('keyup', e => { if (e.key === 'Enter') document.getElementById('loginPassword').focus(); });
+document.getElementById('loginPassword').addEventListener('keyup', e => { if (e.key === 'Enter') providerLogin(); });
+
+console.log('✅ NnlGharPro Provider Panel v5.0');
+console.log('📋 Login → Subscription → Portal');
+</script>
+</body>
+</html>
